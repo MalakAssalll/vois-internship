@@ -4,8 +4,7 @@ services:
   # 1. SERVICE NAME (Nickname for Compose & depends_on)
   backend:
     build: ./backend
-    image: todo-backend:v1.0.2   
-    container_name: todo-backend   
+    image: todo-backend:v1.0.2     
     ports:
       - "3000:3000"
     environment:
@@ -22,7 +21,6 @@ services:
   frontend:
     build: ./frontend
     image: todo-frontend:v1.0.2
-    container_name: todo-frontend
     ports:
       - "5000:80"
     depends_on:
@@ -32,7 +30,6 @@ services:
   # 3. SERVICE NAME
   mysql-db:
     image: mysql:8.4
-    container_name: mysql-db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
@@ -48,7 +45,6 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:5.2
-    container_name: phpmyadmin_container
     restart: always
     environment:
       PMA_HOST: mysql-db
@@ -70,11 +66,8 @@ services:
         - "9090:8080"   # Maps Jenkins internal 8080 -> your host 9090
         - "50000:50000" # Agent port
       volumes:
-        # Saves Jenkins jobs, plugins, and settings on your host disk
         - jenkins_data:/var/jenkins_home
-        # Mounts the host Docker socket so Jenkins can build Docker images!
-        - /var/run/docker.sock:/var/run/docker.sock
-
+        - //var/run/docker.sock:/var/run/docker.sock
 # Shared Bridge Network
 networks:
   todo-network:
