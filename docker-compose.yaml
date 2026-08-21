@@ -59,7 +59,6 @@ services:
 
   jenkins:
       image: jenkins/jenkins:lts-jdk17
-      container_name: jenkins_server
       privileged: true
       user: root
       ports:
