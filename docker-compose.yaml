@@ -61,6 +61,20 @@ services:
     networks:
       - todo-network
 
+  jenkins:
+      image: jenkins/jenkins:lts-jdk17
+      container_name: jenkins_server
+      privileged: true
+      user: root
+      ports:
+        - "9090:8080"   # Maps Jenkins internal 8080 -> your host 9090
+        - "50000:50000" # Agent port
+      volumes:
+        # Saves Jenkins jobs, plugins, and settings on your host disk
+        - jenkins_data:/var/jenkins_home
+        # Mounts the host Docker socket so Jenkins can build Docker images!
+        - /var/run/docker.sock:/var/run/docker.sock
+
 # Shared Bridge Network
 networks:
   todo-network:
@@ -69,3 +83,4 @@ networks:
 # Persistent Data Storage
 volumes:
   mysql-data:
+  jenkins_data:
