@@ -52,16 +52,7 @@ services:
     networks:
       - todo-network
 
-  jenkins:
-      image: jenkins/jenkins:lts-jdk17
-      privileged: true
-      user: root
-      ports:
-        - "9090:8080"   # Maps Jenkins internal 8080 -> your host 9090
-        - "50000:50000" # Agent port
-      volumes:
-        - jenkins_data:/var/jenkins_home
-        - //var/run/docker.sock:/var/run/docker.sock
+
 # Shared Bridge Network
 networks:
   todo-network:
