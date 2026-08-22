@@ -44,10 +44,11 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    // Using triple double quotes (""") so Jenkins substitutes environment variables properly
-                    sh """
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    // 1. Login using strictly single-quoted bash execution to safely pipe DOCKER_PASS
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
 
+                    // 2. Push images using double quotes for Groovy variable expansion
+                    sh """
                         # Push Backend
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
