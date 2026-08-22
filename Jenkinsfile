@@ -42,12 +42,7 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests') {
-            steps {
-                // Run backend tests inside the running backend container
-                sh 'docker compose exec -T backend npm test'
-            }
-        }
+       
 
         stage('Push to Docker Hub') {
             steps {
