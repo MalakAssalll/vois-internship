@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -7,9 +6,7 @@ pipeline {
         BACKEND_IMAGE = 'todo-backend'
         FRONTEND_IMAGE = 'todo-frontend'
 
-        // Build #1 → v1.0.2
-        // Build #2 → v1.0.3
-        // Build #3 → v1.0.4
+        // Dynamic build versioning
         VERSION = "v1.0.${env.BUILD_NUMBER.toInteger() + 1}"
     }
 
@@ -25,10 +22,6 @@ pipeline {
                 script {
                     echo "Building images version: ${VERSION}"
 
-                    // VERSION is automatically available to Docker Compose
-                    // Compose will build:
-                    // todo-backend:${VERSION}
-                    // todo-frontend:${VERSION}
                     sh 'docker compose up -d --build'
 
                     // Tag Backend for Docker Hub
@@ -42,8 +35,6 @@ pipeline {
             }
         }
 
-       
-
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([
@@ -53,8 +44,9 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    // Using triple double quotes (""") so Jenkins substitutes environment variables properly
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
                         # Push Backend
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
@@ -63,7 +55,7 @@ pipeline {
                         # Push Frontend
                         docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
                         docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
-                    '''
+                    """
                 }
             }
         }

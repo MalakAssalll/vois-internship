@@ -47,6 +47,9 @@ services:
       PMA_PASSWORD: password
     depends_on:
       - mysql-db
+    
+    
+    
     networks:
       - todo-network
 
