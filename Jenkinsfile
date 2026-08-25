@@ -37,27 +37,24 @@ pipeline {
 }
 
         stage('Push to Docker Hub') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-credentials',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    // Login directly using environment variables safely
-                    sh 'docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"'
-
-                    // Push images
-                    sh """
-                        docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
-                        docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
-                        docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
-                        docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
-                    """
-                }
-            }
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub-credentials',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )
+        ]) {
+            sh '''
+                printf "%s" "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
+                docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
+                docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
+                docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
+            '''
         }
+    }
+}
     }
 
     post {
