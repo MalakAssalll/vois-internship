@@ -37,24 +37,22 @@ pipeline {
 }
 
         stage('Push to Docker Hub') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-credentials',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )
-        ]) {
-            sh """
-                echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
-                docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
-                docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
-                docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
-            """
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        # Strip any accidental hidden whitespace/newlines from the secret before piping
+                        CLEAN_PASS=$(echo "$DOCKER_PASS" | tr -d '\r\n')
+                        
+                        echo "$CLEAN_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                        docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
+                        docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
+                        docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
+                        docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
+                    '''
+                }
+            }
         }
-    }
-}
     }
 
     post {
