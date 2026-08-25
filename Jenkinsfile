@@ -41,7 +41,6 @@ pipeline {
          sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${env.VERSION}"
         sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
         
-    }
         }
     }
 }
