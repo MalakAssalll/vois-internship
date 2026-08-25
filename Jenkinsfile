@@ -32,25 +32,25 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
-            steps {
-                // withCredentials explicitly binds the password to $DOCKER_PASS in the OS environment
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials', 
-                    usernameVariable: 'DOCKER_USER', 
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    // Uses withEnv to guarantee $DOCKER_PASS is present in the Linux subshell
-                    sh '''
-                        docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-                        docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
-                        docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
-                        docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
-                        docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
-                    '''
-                }
-            }
+       stage('Push to Docker Hub') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-credentials', 
+            usernameVariable: 'DOCKER_USER', 
+            passwordVariable: 'DOCKER_PASS'
+        )]) {
+            // Note the single quotes ' ' around the script block!
+            // This prevents Groovy evaluation bugs while keeping $DOCKER_PASS intact for Bash.
+            sh '''
+                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
+                docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
+                docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
+                docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
+            '''
         }
+    }
+}
     }
 
     post {
