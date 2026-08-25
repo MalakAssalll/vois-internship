@@ -40,7 +40,7 @@ pipeline {
             passwordVariable: 'DOCKER_PASS'
         )]) {
             // MUST be on a single line with the pipe | symbol connecting echo directly to docker login
-            sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                   sh "echo \$DOCKER_PASS | docker login -u \$DOCKERHUB_USER --password-stdin"
 
             sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
             sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
