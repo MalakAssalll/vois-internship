@@ -18,22 +18,23 @@ pipeline {
         }
 
         stage('Build Images via Docker Compose') {
-            steps {
-                script {
-                    echo "Building images version: ${VERSION}"
+    steps {
+        script {
+            echo "Building images version: ${VERSION}"
 
-                    sh 'docker compose up -d --build'
+            // ONLY build the images; do NOT spin up background containers
+            sh "VERSION=${VERSION} docker compose -f docker-compose.yaml build"
 
-                    // Tag Backend for Docker Hub
-                    sh "docker tag ${BACKEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}"
-                    sh "docker tag ${BACKEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
+            // Tag Backend
+            sh "docker tag ${BACKEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}"
+            sh "docker tag ${BACKEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
 
-                    // Tag Frontend for Docker Hub
-                    sh "docker tag ${FRONTEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}"
-                    sh "docker tag ${FRONTEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
-                }
-            }
+            // Tag Frontend
+            sh "docker tag ${FRONTEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}"
+            sh "docker tag ${FRONTEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
         }
+    }
+}
 
         stage('Push to Docker Hub') {
             steps {
