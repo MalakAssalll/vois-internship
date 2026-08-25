@@ -1,10 +1,12 @@
 version: '3.8'
 
 services:
-  # 1. SERVICE NAME (Nickname for Compose & depends_on)
   backend:
     build: ./backend
-    image: todo-backend:${VERSION}   
+    image: todo-backend:${VERSION:-latest}
+    container_name: todo-backend   
+    ports:
+      - "3000:3000"   
     environment:
       - DB_HOST=mysql-db
       - DB_USER=root
@@ -14,25 +16,29 @@ services:
       - mysql-db
     networks:
       - todo-network
-    
-  # 2. SERVICE NAME
+
   frontend:
     build: ./frontend
-    image: todo-frontend:${VERSION}
-  
+    image: todo-frontend:${VERSION:-latest}
+    container_name: todo-frontend
+    ports:
+      - "5000:80"
     depends_on:
-      - backend                 # <--- References the SERVICE NAME above!
+      - backend
     networks:
       - todo-network
-  # 3. SERVICE NAME
+
   mysql-db:
     image: mysql:8.4
+    container_name: mysql-db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: todos
       MYSQL_USER: todos
       MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -40,26 +46,37 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:5.2
+    container_name: phpmyadmin
     restart: always
     environment:
       PMA_HOST: mysql-db
       PMA_USER: root
       PMA_PASSWORD: password
+    ports:
+      - "8080:80"
     depends_on:
       - mysql-db
-    
-    
-    
     networks:
       - todo-network
 
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: always
+    user: root
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - todo-network
 
-# Shared Bridge Network
 networks:
   todo-network:
     driver: bridge
 
-# Persistent Data Storage
 volumes:
   mysql-data:
   jenkins_data:

@@ -2,12 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER = 'MalakAssalll'
-        BACKEND_IMAGE = 'todo-backend'
-        FRONTEND_IMAGE = 'todo-frontend'
-
-        // Dynamic build versioning
-        VERSION = "v1.0.${env.BUILD_NUMBER.toInteger() + 1}"
+        DOCKERHUB_USER  = 'MalakAssalll'
+        BACKEND_IMAGE   = 'todo-backend'
+        FRONTEND_IMAGE  = 'todo-frontend'
+        VERSION         = "v1.0.${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -22,7 +20,8 @@ pipeline {
                 script {
                     echo "Building images version: ${VERSION}"
 
-                    sh 'docker compose up -d --build'
+                    // Pass VERSION environment variable directly into docker compose build
+                    sh "VERSION=${VERSION} docker compose -f docker-compose.yaml build"
 
                     // Tag Backend for Docker Hub
                     sh "docker tag ${BACKEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}"
@@ -44,16 +43,11 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    // 1. Login using strictly single-quoted bash execution to safely pipe DOCKER_PASS
                     sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-
-                    // 2. Push images using double quotes for Groovy variable expansion
+                    
                     sh """
-                        # Push Backend
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
-
-                        # Push Frontend
                         docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${VERSION}
                         docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest
                     """
@@ -64,13 +58,12 @@ pipeline {
 
     post {
         always {
-            sh 'docker compose down'
+            // Remove locally generated build artifacts to clear disk space on agent
+            sh "docker rmi ${BACKEND_IMAGE}:${VERSION} ${FRONTEND_IMAGE}:${VERSION} || true"
         }
-
         success {
-            echo "Successfully built, tested, and published version ${VERSION} to Docker Hub!"
+            echo "Successfully built and published version ${VERSION} to Docker Hub."
         }
-
         failure {
             echo "Pipeline failed for version ${VERSION}."
         }
