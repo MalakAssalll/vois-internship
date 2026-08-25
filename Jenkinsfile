@@ -17,38 +17,32 @@ pipeline {
             }
         }
 
-        stage('Build Images via Docker Compose') {
-            steps {
-                script {
-                    echo "Building images version: ${env.VERSION}"
-                    sh "VERSION=${env.VERSION} docker compose -f docker-compose.yaml build"
+    stage('Build Images via Docker Compose') {
+        steps {
+            script {
+                echo "Tagging and pushing images version: ${env.VERSION}"
 
+                // 1. Wrap the commands inside the registry block for secure authentication
+                withDockerRegistry(credentialsId: 'dockerhub-credentials') {
+                    
+                    // 2. Tag the Backend Images
                     sh "docker tag ${BACKEND_IMAGE}:${env.VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
                     sh "docker tag ${BACKEND_IMAGE}:${env.VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
-
+                    
+                    // 3. Tag the Frontend Images
                     sh "docker tag ${FRONTEND_IMAGE}:${env.VERSION} ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${env.VERSION}"
                     sh "docker tag ${FRONTEND_IMAGE}:${env.VERSION} ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
+
+                    // 4. Push Backend Images to Docker Hub
+                    sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
+                    sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
+
+                    // 5. Push Frontend Images to Docker Hub
+                    sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${env.VERSION}"
+                    sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
                 }
             }
         }
-
-      stage('Push to Docker Hub') {
-    steps {
-          withDockerRegistry(credentialsId: 'dockerhub-credentials', url: '') {
-        
-        sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
-        sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
-         sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${env.VERSION}"
-        sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
-        
-        }
     }
 }
-    }
-
-    post {
-        always {
-            sh 'docker compose down'
-        }
-    }
 }
