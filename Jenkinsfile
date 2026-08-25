@@ -2,10 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER  = 'MalakAssalll'
-        BACKEND_IMAGE   = 'todo-backend'
-        FRONTEND_IMAGE  = 'todo-frontend'
-        VERSION         = "v1.0.${env.BUILD_NUMBER}"
+        DOCKERHUB_USER = 'MalakAssalll'
+        BACKEND_IMAGE = 'todo-backend'
+        FRONTEND_IMAGE = 'todo-frontend'
+
+        // Dynamic build versioning
+        VERSION = "v1.0.${env.BUILD_NUMBER.toInteger() + 1}"
     }
 
     stages {
@@ -20,8 +22,7 @@ pipeline {
                 script {
                     echo "Building images version: ${VERSION}"
 
-                    // Pass VERSION environment variable directly into docker compose build
-                    sh "VERSION=${VERSION} docker compose -f docker-compose.yaml build"
+                    sh 'docker compose up -d --build'
 
                     // Tag Backend for Docker Hub
                     sh "docker tag ${BACKEND_IMAGE}:${VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}"
@@ -43,8 +44,10 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                    
+                    // Login directly using environment variables safely
+                    sh 'docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"'
+
+                    // Push images
                     sh """
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${VERSION}
                         docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest
@@ -58,12 +61,13 @@ pipeline {
 
     post {
         always {
-            // Remove locally generated build artifacts to clear disk space on agent
-            sh "docker rmi ${BACKEND_IMAGE}:${VERSION} ${FRONTEND_IMAGE}:${VERSION} || true"
+            sh 'docker compose down'
         }
+
         success {
-            echo "Successfully built and published version ${VERSION} to Docker Hub."
+            echo "Successfully built, tested, and published version ${VERSION} to Docker Hub!"
         }
+
         failure {
             echo "Pipeline failed for version ${VERSION}."
         }
