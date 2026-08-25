@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         DOCKERHUB_USER = 'MalakAssalll'
+        DOCKER_USER = credentials('dockerhub-credentials') // Pulls username
+        DOCKER_PASS = credentials('dockerhub-credentials') // Pulls password
         BACKEND_IMAGE = 'todo-backend'
         FRONTEND_IMAGE = 'todo-frontend'
 
