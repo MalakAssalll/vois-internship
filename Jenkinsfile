@@ -34,16 +34,20 @@ pipeline {
 
       stage('Push to Docker Hub') {
     steps {
-        script {
-            docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
-                sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
-                sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${env.VERSION}"
-                sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
-            }
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-credentials', 
+            usernameVariable: 'DOCKER_USER', 
+            passwordVariable: 'DOCKER_PASS'
+        )]) {
+            // MUST be on a single line with the pipe | symbol connecting echo directly to docker login
+            sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+
+            sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
+            sh "docker push ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
+            sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:${env.VERSION}"
+            sh "docker push ${DOCKERHUB_USER}/${FRONTEND_IMAGE}:latest"
         }
     }
-}
 }
     }
 
