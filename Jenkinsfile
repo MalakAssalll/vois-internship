@@ -24,7 +24,9 @@ pipeline {
 
                 // 1. Wrap the commands inside the registry block for secure authentication
                 withDockerRegistry(credentialsId: 'dockerhub-credentials') {
-                    
+                    // 1. build docker container 
+                    sh "docker build -t ${BACKEND_IMAGE}:${env.VERSION} ./backend"
+                    sh "docker build -t ${FRONTEND_IMAGE}:${env.VERSION} ./frontend"
                     // 2. Tag the Backend Images
                     sh "docker tag ${BACKEND_IMAGE}:${env.VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:${env.VERSION}"
                     sh "docker tag ${BACKEND_IMAGE}:${env.VERSION} ${DOCKERHUB_USER}/${BACKEND_IMAGE}:latest"
