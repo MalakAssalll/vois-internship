@@ -60,9 +60,7 @@ services:
       - todo-network
 
   jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile.jenkins
+    image: jenkins/jenkins:lts
     container_name: jenkins
     restart: always
     user: root
